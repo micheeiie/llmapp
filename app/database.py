@@ -2,7 +2,7 @@ import motor
 import os
 from beanie import init_beanie
 
-from app.models.query import QueryDocument
+from llmapp.app.models.schemas import QueryDocument
 
 async def startup_db_client():
     user = os.environ.get('MONGO_INITDB_ROOT_USERNAME', '')
