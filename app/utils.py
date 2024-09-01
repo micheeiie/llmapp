@@ -1,11 +1,8 @@
-# from bson.objectid import ObjectId
-# from .database import conversations_collection, conversation_helper
-# from .schemas import ConversationPOST, ConversationPUT
-
 import openai
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+from prompt import gpt_system_prompt
 
 
 load_dotenv()
@@ -17,8 +14,8 @@ def generate_answer(query,parameters):
     )
 
     messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": query}
+        {"role": "system", "content": getattr(gpt_system_prompt, "prompt") },
+        {"role": "user", "content": query }
     ]
 
     # Extract parameters with defaults

@@ -3,23 +3,24 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from typing import List, Optional, Dict, Union
 from pydantic import BaseModel, Field, ValidationError
-from app.database import startup_db_client
-
+from database import startup_db_client, shutdown_db_client
+from contextlib import asynccontextmanager
 import os
 import json
 import uuid
 import openai
-
 from utils import generate_answer
 from schemas import APIError, QueryRoleType, Prompt, Conversation, ConversationFull, ConversationPOST, ConversationPUT, ConversationInfo
 
-
-app = FastAPI()
-
-@app.on_event("startup")
-async def lifespan():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     # Start the database connection
     await startup_db_client()
+    yield
+    await shutdown_db_client()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
