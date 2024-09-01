@@ -26,13 +26,10 @@ async def lifespan():
 def root():
     return {"message": "Hello, I am a Chatbot!"}
 
-
-@app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=400,
-        content=APIError(code=400,
-                         message="Invalid parameters provided")
+        content=APIError(code=400, message="Invalid parameters provided")
     )
 
 @app.post("/conversations", tags=["Conversations"])
@@ -41,7 +38,7 @@ async def create_new_conversation(conversation_post : ConversationPOST):
     creates a conversation with LLM
     """
     try:
-        uuid_num = uuid.uuid4()
+        uuid_num = str(uuid.uuid4())
         params = conversation_post.params if conversation_post.params is not None else {}
 
         conversation_info_db = ConversationInfo(
@@ -52,60 +49,58 @@ async def create_new_conversation(conversation_post : ConversationPOST):
             messages=[] 
         )
         
-        #insert into the db
+        # Insert the document into the database
         await conversation_info_db.insert()
-
         return JSONResponse( status_code=201, content= {"id": str(uuid_num)})
+    
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=APIError(code=500,
-                            message="Internal server error")
+            detail=APIError(code=500, message="Internal server error")
         )
-
-
+        
+    
 @app.get("/conversations", tags=["Conversations"])
 async def retrieve_conversations():
     """
-    retrieves a user conversation
+    Retrieves all user conversations.
     """
     try:
-        #retrieve all conversations from db
+        # Retrieve all conversations from the database
         conversation_info = await ConversationInfo.find_all().to_list()
-
-        return JSONResponse( status_code=200, content= conversation_info)
+        return JSONResponse(status_code=200, content=conversation_info)
     
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
-            detail=APIError(code=500,
-                            message="Internal server error")
+            detail=APIError(code=500, message="Internal server error")
         )
     
 
-@app.put("/conversations/{id}", response_model=None)
+@app.put("/conversations/{id}")
 async def update_existing_conversation(conversation: ConversationPUT):
     """
-    updates llm properties of a conversation
+    Updates the LLM properties of a conversation.
     """
     try:
         conversation_info = await ConversationInfo.find_one(ConversationInfo.id == id)
+
     except Exception as e:
         raise HTTPException(
                 status_code=404,
-                detail=APIError(code=404,
-                                 message="Specified resource(s) was not found")
-            )
+                detail=APIError(code=404, message="Specified resource(s) was not found")
+                )
 
     try:
         conversation_info.name = conversation_info.name
         conversation_info.params = conversation.params
-        return JSONResponse( status_code=204, content= "Sucessfully updated.")
+        await conversation_info.save()
+        return JSONResponse(status_code=204, content= "Sucessfully updated.")
+    
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=APIError(code=500,
-                            message="Internal server error")
+            detail=APIError(code=500,message="Internal server error")
         )
     
 
@@ -116,81 +111,89 @@ async def retrieve_conversation(id: str):
     """
     try:
         conversation_info = await ConversationInfo.find_one(ConversationInfo.id == id)
+
     except Exception as e:
         raise HTTPException(
                 status_code=404,
-                detail=APIError(code=404,
-                                 message="Specified resource(s) was not found")
+                detail=APIError(code=404,message="Specified resource(s) was not found")
             )
 
     try:
-        #get conversation histoy 
+        # Get conversation history
         conversation_history = conversation_info.messages
-        return JSONResponse( status_code=200, content= conversation_history)
+        return JSONResponse(status_code=200, content= conversation_history)
+    
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=APIError(code=500,
-                            message="Internal server error")
+            detail=APIError(code=500, message="Internal server error")
         )
 
 @app.delete("/conversations/{id}", tags = ["Conversations"])
 async def delete_conversation():
     """
-    deletes conversation
+    Deletes a conversation by ID.
     """
     try:
         conversation_info = await ConversationInfo.find_one(ConversationInfo.id == id)
+
     except Exception as e:
         raise HTTPException(
                 status_code=404,
-                detail=APIError(code=404,
-                                 message="Specified resource(s) was not found")
+                detail=APIError(code=404, message="Specified resource(s) was not found")
             )
 
     try:
         await conversation_info.delete()
-        return JSONResponse( status_code=204, content= "Successfully deleted conversation.")
+        return JSONResponse(status_code=204, content= "Successfully deleted conversation.")
+    
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=APIError(code=500,
-                            message="Internal server error")
-        )
+            detail=APIError(code=500, message="Internal server error"))
 
 
 @app.post("/queries", tags =['LLM Queries'])
 async def post_queries(id_num: str,
                        prompt: Prompt):
     """
-    sends prompt to llm
+    Sends a prompt to the LLM and updates the conversation.
     """
     try:
         conversation_info = await ConversationInfo.find_one(ConversationInfo.id == id)
+
     except Exception as e:
         raise HTTPException(
                 status_code=404,
-                detail= APIError(code=404,
-                                 message="Specified resource(s) was not found")
+                detail= APIError(code=404, message="Specified resource(s) was not found")
             )
     try:
-        answer = await generate_answer(prompt.content)
+        # Generate the answer using the LLM
+        parameters = conversation_info.params
+        answer = await generate_answer(prompt.content, parameters)
+
         try:
-            #add to db
-            a = 1 
+            # Update the conversation messages
+            currentChat = [{"role":"user",
+                           "content": prompt.content},
+                           {"role":"assistant",
+                            "content":answer}]
+            
+            conversation_info.messages = conversation_info.messages.append(currentChat)
+            conversation_info.save()
+
         except Exception as e:
             raise HTTPException(
                 status_code=422,
-                detail=APIError(code=422,
-                                message="Unable to create resource")
+                detail=APIError(code=422, message="Unable to create resource")
             )
 
         return JSONResponse( status_code=201, content= {"id": id_num})
+    
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=APIError(code=500,
-                            message="Internal server error")
+            detail=APIError(code=500, message="Internal server error")
         )
 
 
