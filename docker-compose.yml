@@ -20,3 +20,5 @@ services:
       - .env
     depends_on:
       - mongodb
+    volumes:
+      - ./:/app

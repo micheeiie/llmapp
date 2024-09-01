@@ -1,5 +1,6 @@
-from typing import List, Optional, Dict, Union
+from enum import Enum
 from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Union
 from beanie import Document, PydanticObjectId
 
 
@@ -10,7 +11,7 @@ class APIError(BaseModel):
     request: Optional[Dict[str, str]] = None
     details: Optional[Dict[str, str]] = None
 
-class QueryRoleType(str):
+class QueryRoleType(str, Enum):
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
@@ -28,6 +29,9 @@ class Conversation(BaseModel):
     params: Optional[Dict[str, str]] = {}
     tokens: int = Field(..., read_only=True, gt=0)
 
+class Queries(BaseModel):
+    id: str = Field(..., read_only=True)
+    prompt : Prompt
 
 class ConversationFull(BaseModel):
     id: str = Field(..., read_only=True)
@@ -52,5 +56,5 @@ class ConversationInfo(Document):
     tokens: Optional[int] = Field(None, gt=0)
     messages: Optional[List[Prompt]] = []
 
-    class Settings:
+    class Config:
         collection = "conversation_info"
