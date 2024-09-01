@@ -1,5 +1,7 @@
 from typing import List, Optional, Dict, Union
 from pydantic import BaseModel, Field
+from beanie import Document, PydanticObjectId
+
 
 
 class APIError(BaseModel):
@@ -23,7 +25,7 @@ class Prompt(BaseModel):
 class Conversation(BaseModel):
     id: str = Field(..., read_only=True)
     name: str = Field(..., max_length=10)
-    params: Optional[Dict[str, str]] = None
+    params: Optional[Dict[str, str]] = {}
     tokens: int = Field(..., read_only=True, gt=0)
 
 
@@ -41,3 +43,14 @@ class ConversationPOST(BaseModel):
 class ConversationPUT(BaseModel):
     name: str = Field(max_length=200)
     params: Dict[str, str] = None
+
+
+class ConversationInfo(Document):
+    id: str
+    name: str = Field(..., max_length=200)
+    params: Optional[Dict[str, str]] = {}
+    tokens: Optional[int] = Field(None, gt=0)
+    messages: Optional[List[Prompt]] = []
+
+    class Settings:
+        collection = "conversation_info"
