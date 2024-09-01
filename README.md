@@ -8,6 +8,13 @@ Before you begin, ensure you have the following installed:
 - **Docker Compose:** [Installation guide](https://docs.docker.com/compose/install/)
 
 
+Add these 4 into a .env file
+OPENAI_API_KEY
+MONGO_INITDB_ROOT_USERNAME
+MONGO_INITDB_ROOT_PASSWORD
+MONGO_INITDB_DATABASE
+
+
 Follow these steps to get the  application up and running.
 
 ### 1. Clone the Repository
