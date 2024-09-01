@@ -1,4 +1,4 @@
-# Govtech Intern Assignment
+# Assignment
 
 ## Getting Started
 
