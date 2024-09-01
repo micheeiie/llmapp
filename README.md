@@ -8,13 +8,6 @@ Before you begin, ensure you have the following installed:
 - **Docker Compose:** [Installation guide](https://docs.docker.com/compose/install/)
 
 
-Add these 4 into a .env file
-OPENAI_API_KEY
-MONGO_INITDB_ROOT_USERNAME
-MONGO_INITDB_ROOT_PASSWORD
-MONGO_INITDB_DATABASE
-
-
 Follow these steps to get the  application up and running.
 
 ### 1. Clone the Repository
@@ -23,14 +16,20 @@ Follow these steps to get the  application up and running.
 git clone https://github.com/micheeiie/llmapp
 cd llmap
 ```
+### 2. Add these 4 into a .env file
 
-### 2. Build and Run the Application
+OPENAI_API_KEY
+MONGO_INITDB_ROOT_USERNAME
+MONGO_INITDB_ROOT_PASSWORD
+MONGO_INITDB_DATABASE
+
+### 3. Build and Run the Application
 
 ```bash
 docker-compose up --build
 ```
 
-### 3. Access the endpoints
+### 4. Access the endpoints
 
 Visit [http://localhost:8000/](http://localhost:8000/) to access the endpoints
 
